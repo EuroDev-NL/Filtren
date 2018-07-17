@@ -18,12 +18,16 @@ def checkSuffix(str_input):
 	new_str = ""
 	found = False
 
-	for x in range(len(str_in)):
+	for x in range(len(str_in) - 2):
 		if (str_lwr[x] == 'i' and str_lwr[x + 1] == 'n' and str_lwr[x + 2] == 'c' and (isLetter(str_lwr[x - 1]) == False)):
 			index = x
 			found = True
 			break
 		elif (str_lwr[x] == 'l' and str_lwr[x + 1] == 'l' and str_lwr[x + 2] == 'c' and (isLetter(str_lwr[x - 1]) == False)):
+			index = x
+			found = True
+			break
+		elif (str_lwr[x] == 'l' and str_lwr[x + 1] == 't' and str_lwr[x + 2] == 'd' and (isLetter(str_lwr[x - 1]) == False)):
 			index = x
 			found = True
 			break
@@ -50,14 +54,18 @@ import datetime
 time = datetime.datetime.now()
 
 #Loading current export excel sheet
-print(" -----------------------")
-print(" Welcome to Filtren v1.2 ")
-print(" -----------------------\n")
+print(" -------------------------")
+print(" Welcome to Filtren v1.2.2 ")
+print(" -------------------------\n")
 
 found_file = False
 
 while found_file == False:
-	file_in = input("Please enter file name with extension (.xlsx): ")
+	file_in = input("Please enter file name: ")
+
+	if ".xlsx" not in file_in:
+		file_in = file_in + ".xlsx"
+
 	try:
 	    source = load_workbook(file_in)
 	    found_file = True
@@ -82,17 +90,25 @@ while valid_choice == False:
 		print("Error! Invalid option, please try again.\n")
 
 if filter_choice == '1':
-	print("[Sales] Filtering process started ...")
+	print("\n[Sales] Filtering process started ...")
 else:
-	print("[HR/Finance] Filtering process started ...")
+	print("\n[HR/Finance] Filtering process started ...")
 
 #Initializing variables to keep track of rows and criteria
 currentRow = 1
 filteredSheetRow = 1
 is_empty = False
-department_warning = False
 status_warning = False
 loop_stopped = False
+
+#Indexes for header info
+name_index = -1
+email_index = -1
+first_name_index = -1
+last_name_index = -1
+department_index = -1
+title_index = -1
+status_index = -1
 
 #Putting header at top of file
 header = ("Company Name", "Title", "First Name", "Last Name", "Email")
@@ -101,26 +117,84 @@ wb_sheet.append(header)
 found_header = False
 
 for eachRow in sheet.iter_rows():
-	#Restting variables
+	#Resetting variables
 	is_empty = False
 
 	if found_header == False:
-		for eachCol in sheet.iter_cols():
-			print(eachCol)
-		found_header == True
+		for x in range(1, 50):
+			headerValue = sheet.cell(row=currentRow, column=x).value
+			if headerValue != None:
+				headerValue = headerValue.lower()
+				if headerValue == "rname" and name_index == -1:
+					name_index = x
+				elif headerValue == "cpemail" and email_index == -1:
+					email_index = x
+				elif headerValue == "cpfirstname" and first_name_index == -1:
+					first_name_index = x
+				elif headerValue == "cpsurname" and last_name_index == -1:
+					last_name_index = x
+				elif headerValue == "cpdepartment" and department_index == -1:
+					department_index = x
+				elif headerValue == "status" and status_index == -1:
+					status_index = x
+				elif headerValue == "cptitle" and title_index == -1:
+					title_index = x
+
+			# 	print("X: " + str(x) + ", [" + headerValue + "]")
+			# else:
+			# 	print("X: " + str(x) + ", [NONE]")
+
+		found_header = True
+
+	if name_index == -1:
+		print("\nERROR! Missing \"RName\" column in file.\n")
+		loop_stopped = True
+		break
+	elif email_index == -1:
+		print("\nERROR! Missing \"Email\" column in file.\n")
+		loop_stopped = True
+		break
+	elif first_name_index == -1:
+		print("\nERROR! Missing \"CPFirstName\" column in file.\n")
+		loop_stopped = True
+		break
+	elif last_name_index == -1:
+		print("\nERROR! Missing \"CPSurName\" column in file.\n")
+		loop_stopped = True
+		break
+	elif department_index == -1:
+		print("\nERROR! Missing \"CPDepartment\" column in file.\n")
+		loop_stopped = True
+		break
+	elif status_index == -1:
+		print("\nERROR! Missing \"Status\" column in file.\n")
+		loop_stopped = True
+		break
+	elif title_index == -1:
+		print("\nERROR! Missing \"Title\" column in file.\n")
+		loop_stopped = True
+		break
+
+	# Variables for reference
+	# name_index
+	# email_index
+	# first_name_index
+	# last_name_index
+	# department_index
+	# status_index
 
 	#Parsing relevant information from export
-	company_name = sheet.cell(row=currentRow, column=1).value
-	email = sheet.cell(row=currentRow, column=24).value
-	title = sheet.cell(row=currentRow, column=17).value
-	first_name = sheet.cell(row=currentRow, column=19).value
-	last_name = sheet.cell(row=currentRow, column=20).value
-	department = sheet.cell(row=currentRow, column=26).value
-	status = sheet.cell(row=currentRow, column=16).value
+	company_name = sheet.cell(row=currentRow, column=name_index).value
+	email = sheet.cell(row=currentRow, column=email_index).value
+	title = sheet.cell(row=currentRow, column=title_index).value
+	first_name = sheet.cell(row=currentRow, column=first_name_index).value
+	last_name = sheet.cell(row=currentRow, column=last_name_index).value
+	department = sheet.cell(row=currentRow, column=department_index).value
+	status = sheet.cell(row=currentRow, column=status_index).value
 
 	#Only for testing purposes
 	#print("[" + str(company_name) + ", " + str(email) + ", " + str(status) + ", Empty Status: " + str(is_empty) + "]")
-
+	#print(str(email))
 	#Checking if fields are blank, if so then flag will be set
 	if company_name is None:
 		is_empty = True
@@ -146,28 +220,31 @@ for eachRow in sheet.iter_rows():
 	# 	if input_value == 'n':
 	# 		print('\x1b[0;30;43m' + 'Filtering process aborted.' + '\x1b[0m')
 	# 		loop_stopped = True
-	# 		break
-
-	#Generating status warning
-	if (is_empty != True and status != "Mailing list" and status != "Status"):
-		print('Multiple entries without type \'Mailing List\' detected and will be filtered out, do you wish to continue?')
-		status_warning_response = input("Type \'y\' for YES or \'n\' for NO: ")
-		status_warning = True
-		#Handling status warning response
-		if status_warning_response == 'n':
-			print('Filtering process aborted.')
-			loop_stopped = True
-			break
+	# 		break	
 
 	#Checking details in variables
 	if is_empty == False:
+		#Generating status warning
+		if status_warning == False and status.lower() != "mailing list":
+			print('\nMultiple entries without type \'Mailing List\' detected and will be filtered out, do you wish to continue?')
+			status_warning_response = input("Type \'y\' for YES or \'n\' for NO: ")
+
+			#Handling status warning response
+			if status_warning_response == 'n':
+				print('\nFiltering process terminated.\n')
+				loop_stopped = True
+				break
+			else:
+				print("\n")
+				status_warning = True
+
 		if checkTitle(title) == True:
 			#Creating tuple to be written to file if valid
 			temp_tup = (checkSuffix(company_name), title, first_name, last_name, email)
 
 			#Making sure email address is valid
 			if '@' in email:
-				if title.lower() != "mr." or title.lower() != "mrs." or title.lower() != "ms." or title.lower() != "dr.":
+				if status.lower() == "mailing list":
 					if filter_choice == '1':
 						if department.lower() == "sales":
 							wb_sheet.append(temp_tup)
@@ -189,22 +266,48 @@ if loop_stopped == False:
 	# 	department_file = "Finance/HR"
 
 	#filtered_result_file_name = department_file + " Filtered Result " + str(time.day) + "-" + str(time.month) + "-" + str(time.year) + ".xlsx"
-	filtered_result_file_name =  "Filtered Result " + str(time.day) + "-" + str(time.month) + "-" + str(time.year) + ".xlsx"
+	#filtered_result_file_name =  "Filtered Result " + str(time.day) + "-" + str(time.month) + "-" + str(time.year) + ".xlsx"
 
 	#Saving the new Workbook
-	new_wb.save(filtered_result_file_name)
+	#new_wb.save(filtered_result_file_name)
 
 	#Printing message to user
 	print("Filtering complete.")
-	print("\n\"" + filtered_result_file_name + "\" saved successfully.\n")
 
-	while True:
-		input("Press \"enter\" to exit.")
-		break
+	saved_file = False
+
+	while saved_file == False:
+		file_name = input("\nPlease enter name for new file: ")
+
+		if ".xlsx" not in file_name:
+			file_name = file_name + ".xlsx"
+		
+		print("\nFiltered results will be saved as \"" + str(file_name) + "\", continue?")
+		continue_choice = input("Type \'y\' for YES or \'n\' for NO: ")
+
+		if continue_choice == 'y':
+			try:
+			    temp_src = load_workbook(file_name)
+			    print("\nWARNING! \"" + str(file_name) + "\" already exists in current directory. Do you want to overwrite it?")
+			    overwrite_choice = input("Type \'y\' for YES or \'n\' for NO: ")
+
+			    if overwrite_choice == 'y':
+			    	print("\n\"" + str(file_name) + "\" saved successfully!\n")
+			    	new_wb.save(file_name)
+			    	saved_file = True
+			except FileNotFoundError as not_found:
+				print("\n\"" + str(file_name) + "\" saved successfully!\n")
+				new_wb.save(file_name)
+				saved_file = True
+	
 
 else:
 	err_tup = ('FILTERING WAS INTERRUPTED, DO NOT USE THIS FILE!', 'FILTERING WAS INTERRUPTED, DO NOT USE THIS FILE', 'FILTERING WAS INTERRUPTED, DO NOT USE THIS FILE!', 'FILTERING WAS INTERRUPTED, DO NOT USE THIS FILE!', 'FILTERING WAS INTERRUPTED, DO NOT USE THIS FILE!')
 	wb_sheet.append(err_tup)
 	new_wb.save("FILTERING ERROR, DO NOT USE.xlsx")
+
+while True:
+		input("Press \"enter\" to exit.")
+		break
 
 
