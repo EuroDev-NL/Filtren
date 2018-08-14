@@ -5,7 +5,7 @@ def isLetter(char):
 		return True
 
 def checkTitle(str_input):
-	if str_input != "Mr." and str_input != "Ms." and str_input != "Mrs.":
+	if "Mr." not in str_input and "Ms." not in str_input and "Mrs." not in str_input:
 		return False
 	else:
 		return True
@@ -55,7 +55,7 @@ time = datetime.datetime.now()
 
 #Loading current export excel sheet
 print(" -------------------------")
-print(" Welcome to Filtren v1.2.2 ")
+print(" Welcome to Filtren v1.3.2 ")
 print(" -------------------------\n")
 
 found_file = False
@@ -83,16 +83,24 @@ filter_choice = -1
 valid_choice = False
 
 while valid_choice == False:
-	filter_choice = input("Please type 1 to filter for Sales, or 2 to filter for HR/Finance: ")
-	if filter_choice == '1' or filter_choice == '2':
+	filter_choice = input("\nDepartment filtering options:\n   1 - Sales\n   2 - HR/Finance\n   3 - Management\n   4 - Sales/Management (including blank departments)\n   5 - No department filter (including blank departments)\n   6 - No department filter (NOT including blank departments)\n\nPlease type a number: ")
+	if filter_choice == '1' or filter_choice == '2' or filter_choice == '3' or filter_choice == '4' or filter_choice == '5' or filter_choice == '6':
 		valid_choice = True
 	else:
 		print("Error! Invalid option, please try again.\n")
 
 if filter_choice == '1':
 	print("\n[Sales] Filtering process started ...")
-else:
+elif filter_choice == '2':
 	print("\n[HR/Finance] Filtering process started ...")
+elif filter_choice == '3':
+	print("\n[Management] Filtering process started ...")
+elif filter_choice == '4':
+	print("\n[Sales/Management/Blanks] Filtering process started ...")
+elif filter_choice == '5':
+	print("\n[No Department/Blanks] Filtering process started ...")
+else:
+	print("\n[No Department/No Blanks] Filtering process started ...")
 
 #Initializing variables to keep track of rows and criteria
 currentRow = 1
@@ -192,9 +200,6 @@ for eachRow in sheet.iter_rows():
 	department = sheet.cell(row=currentRow, column=department_index).value
 	status = sheet.cell(row=currentRow, column=status_index).value
 
-	#Only for testing purposes
-	#print("[" + str(company_name) + ", " + str(email) + ", " + str(status) + ", Empty Status: " + str(is_empty) + "]")
-	#print(str(email))
 	#Checking if fields are blank, if so then flag will be set
 	if company_name is None:
 		is_empty = True
@@ -207,9 +212,14 @@ for eachRow in sheet.iter_rows():
 	elif last_name == None:
 		is_empty = True
 	elif department == None:
-		is_empty = True
+		if filter_choice != '4' and filter_choice != '5':
+			is_empty = True
 	elif status == None:
 		is_empty = True
+
+	#Only for testing purposes
+	#print("[" + str(company_name) + ", " + str(email) + ", " + str(status) + ", Empty Status: " + str(is_empty) + "]")
+	#print(str(email))
 
 	#Generating department warning
 	# if (department != "Sales" and department_warning == False):
@@ -225,7 +235,7 @@ for eachRow in sheet.iter_rows():
 	#Checking details in variables
 	if is_empty == False:
 		#Generating status warning
-		if status_warning == False and status.lower() != "mailing list":
+		if status_warning == False and status.lower() != "mailing list" and status.lower() != "status":
 			print('\nMultiple entries without type \'Mailing List\' detected and will be filtered out, do you wish to continue?')
 			status_warning_response = input("Type \'y\' for YES or \'n\' for NO: ")
 
@@ -248,10 +258,18 @@ for eachRow in sheet.iter_rows():
 					if filter_choice == '1':
 						if department.lower() == "sales":
 							wb_sheet.append(temp_tup)
-					else:
+					elif filter_choice == '2':
 						if department.lower() == "finance" or department.lower() == "hr":
 							wb_sheet.append(temp_tup)
-
+					elif filter_choice == '3':
+						if department.lower() == "management":
+							wb_sheet.append(temp_tup)
+					elif filter_choice == '4':
+						if department == None or "management" in department.lower() or "sales" in department.lower():
+							wb_sheet.append(temp_tup)
+					elif filter_choice == '5' or filter_choice == '6':
+							wb_sheet.append(temp_tup)
+					
 	#Increading row
 	currentRow += 1
 
